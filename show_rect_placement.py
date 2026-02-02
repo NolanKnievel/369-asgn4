@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import pandas
 import random
 
+# border pad to give us more context around censored rect
+BORDER_PAD = 25
 
 
 # note my parquet truncates the rect placements, so we read from the csv
@@ -43,8 +45,8 @@ query_before_rect = f"""
                 ORDER BY timestamp DESC
             ) AS rn
         FROM read_parquet('../asgn3/r_place.parquet')
-        WHERE x BETWEEN {rect_x1} AND {rect_x2}
-        AND y BETWEEN {rect_y1} AND {rect_y2}
+        WHERE x BETWEEN {rect_x1 - BORDER_PAD} AND {rect_x2 + BORDER_PAD}
+        AND y BETWEEN {rect_y1 - BORDER_PAD} AND {rect_y2 + BORDER_PAD}
         AND timestamp <= '{example_rect_timestamp}'
     )
     WHERE rn = 1;
