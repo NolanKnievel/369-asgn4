@@ -38,21 +38,21 @@ for i in range(len(result)):
     query_before_rect = f"""
         SELECT x, y, pixel_color, timestamp
         FROM (
-            SELECT
-                x,
-                y,
-                pixel_color,
-                timestamp,
-                ROW_NUMBER() OVER (
-                    PARTITION BY x, y
-                    ORDER BY timestamp DESC
-                ) AS rn
-            FROM read_parquet('../asgn3/r_place.parquet')
-            WHERE x BETWEEN LEAST({rect_x1},{rect_x2}) - {BORDER_PAD}
-                    AND GREATEST({rect_x1},{rect_x2}) + {BORDER_PAD}
-            AND y BETWEEN LEAST({rect_y1},{rect_y2}) - {BORDER_PAD}
-                    AND GREATEST({rect_y1},{rect_y2}) + {BORDER_PAD}
-            AND timestamp <= '{rect_timestamp}'
+        SELECT
+        x,
+        y,
+        pixel_color,
+        timestamp,
+        ROW_NUMBER() OVER (
+            PARTITION BY x, y
+            ORDER BY timestamp DESC
+        ) AS rn
+        FROM read_parquet('../asgn3/r_place.parquet')
+        WHERE x BETWEEN LEAST({rect_x1},{rect_x2}) - {BORDER_PAD}
+            AND GREATEST({rect_x1},{rect_x2}) + {BORDER_PAD}
+        AND y BETWEEN LEAST({rect_y1},{rect_y2}) - {BORDER_PAD}
+            AND GREATEST({rect_y1},{rect_y2}) + {BORDER_PAD}
+        AND timestamp <= '{rect_timestamp}'
         )
         WHERE rn = 1;
 
