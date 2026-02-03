@@ -20,50 +20,54 @@ AND ABS(
 
 result = duckdb.sql(query_rect_coordinates).fetchall()
 
-num = random.randint(0, len(result) - 1)
 
-example_rect_coordinates = result[num][0].split(',')
-example_rect_timestamp = result[num][1]
+for i in range(len(result)):
+    print(f'plotting rect {i} : {result[i][0]}')
+    rect_coordinates = result[i][0].split(',')
+    rect_timestamp = result[i][1]
 
-
-rect_x1 = int(example_rect_coordinates[0])
-rect_y1 = int(example_rect_coordinates[1])
-rect_x2 = int(example_rect_coordinates[2])
-rect_y2 = int(example_rect_coordinates[3])
-
-
-query_before_rect = f"""
-    SELECT x, y, pixel_color, timestamp
-    FROM (
-        SELECT
-            x,
-            y,
-            pixel_color,
-            timestamp,
-            ROW_NUMBER() OVER (
-                PARTITION BY x, y
-                ORDER BY timestamp DESC
-            ) AS rn
-        FROM read_parquet('../asgn3/r_place.parquet')
-        WHERE x BETWEEN {rect_x1 - BORDER_PAD} AND {rect_x2 + BORDER_PAD}
-        AND y BETWEEN {rect_y1 - BORDER_PAD} AND {rect_y2 + BORDER_PAD}
-        AND timestamp <= '{example_rect_timestamp}'
-    )
-    WHERE rn = 1;
-
-"""
+    # get rect coordinates
+    rect_x1 = int(rect_coordinates[0])
+    rect_y1 = int(rect_coordinates[1])
+    rect_x2 = int(rect_coordinates[2])
+    rect_y2 = int(rect_coordinates[3])
 
 
-df = duckdb.sql(query_before_rect).df()
 
-# Estimate pixel size
-x_range = df.x.max() - df.x.min() + 1
-y_range = df.y.max() - df.y.min() + 1
-size = (6*72/x_range)**2  # 6 inches * 72 dpi / width in pixels
+    # query pixels placed right before the rect
+    query_before_rect = f"""
+        SELECT x, y, pixel_color, timestamp
+        FROM (
+            SELECT
+                x,
+                y,
+                pixel_color,
+                timestamp,
+                ROW_NUMBER() OVER (
+                    PARTITION BY x, y
+                    ORDER BY timestamp DESC
+                ) AS rn
+            FROM read_parquet('../asgn3/r_place.parquet')
+            WHERE x BETWEEN LEAST({rect_x1},{rect_x2}) - {BORDER_PAD}
+                    AND GREATEST({rect_x1},{rect_x2}) + {BORDER_PAD}
+            AND y BETWEEN LEAST({rect_y1},{rect_y2}) - {BORDER_PAD}
+                    AND GREATEST({rect_y1},{rect_y2}) + {BORDER_PAD}
+            AND timestamp <= '{rect_timestamp}'
+        )
+        WHERE rn = 1;
 
-plt.figure(figsize=(6,6))
-plt.scatter(df.x, df.y, c=df.pixel_color, s=size, marker="s")  # marker="s" = square
-plt.gca().invert_yaxis()
-plt.axis("equal")
-plt.axis("off")
-plt.show()
+    """
+
+    df = duckdb.sql(query_before_rect).df()
+
+    # plot pixels
+    x_range = df.x.max() - df.x.min() + 1
+    y_range = df.y.max() - df.y.min() + 1
+    size = (6*36/x_range)**2 
+
+    plt.figure(figsize=(6,6))
+    plt.scatter(df.x, df.y, c=df.pixel_color, s=size, marker="s")
+    plt.gca().invert_yaxis()
+    plt.axis("equal")
+    plt.axis("off")
+    plt.show()

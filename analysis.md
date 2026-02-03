@@ -26,3 +26,15 @@ The 19 rectangular pixel placements, are:
 ('871,546,878,550',)
 ('862,540,868,544',)
 ('862,540,873,545',)
+
+
+We can explore the purpose of these rectangular placements by viewing the canvas state right before the rectangle was placed. The python file, show_rect_placement.py, plots local parts of the r/place canvas where rectangles were placed, the moment before the rectangle was placed. It would be inappropriate to include many of the images here, but here are a couple of the plots. 
+
+
+Interestingly, when we run the program we can see multiple matching canvas plots, indicated that after a plot was moderated, users recreated their explicit artwork, which was then moderated another time.
+
+
+
+
+
+
